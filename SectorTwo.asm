@@ -6,11 +6,21 @@ main:
    mov al, 0x13
    int 0x10
    
-   call SetupKeyboardInterupt
+ 
 
    call drawTrack
    call drawFinishLine
+
+   mov eax, 95
+   mov [carY], eax
+   mov [pla1Y], eax
+
+   mov eax, 45
+   mov [carx], eax
+   mov [pla1x], eax
    call drawPlayer
+
+   call SetupKeyboardInterupt
    
    jmp $
 
@@ -49,38 +59,21 @@ keyboard_handler:
 
 
 Key_Up:
+   call write_char
    ret
 
 
 Key_Down:
-   cmp byte [keyval], 'w'
-   je .w
-   cmp byte [keyval], 's'
-   je .s
-   cmp byte [keyval], 'a'
-   je .a
-   cmp byte [keyval], 'd'
-   je .d
 
-   jmp .done
-
-
-.w:
-   jmp .done
-.s:
-   jmp .done
-.a:
-   jmp .done
-.d: 
-   jmp .done
-
-.done
+   call write_char
    ret
 write_char:
    mov ah, 0x0E
    mov bl, 0x09
    int 0x10
    ret
+
+
 ;.....................graphic setup..................; 
 fillPixel: 
    push eax
@@ -189,9 +182,9 @@ drawBox:
    ret 
    
 drawPlayer: 
-   mov eax, 95
+   mov eax, [carY]
    mov [cornerY], eax
-   mov eax, 45
+   mov eax, [carx]
    mov [cornerX], eax
 
    mov word [height], 5
@@ -221,4 +214,10 @@ height    dd 0x40
 width     dd 0x40
 color     dd 0x05
 keyval    db 0
+
+pla1x     dd 0x0
+pla1Y     dd 0x0
+
+carx      dd 0x0
+carY      dd 0x0
 
