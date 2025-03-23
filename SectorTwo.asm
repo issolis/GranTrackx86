@@ -11,14 +11,21 @@ main:
    call drawTrack
    call drawFinishLine
 
-   mov eax, 95
+   mov eax, 95   ;95
    mov [carY], eax
    mov [pla1Y], eax
 
-   mov eax, 45
+   mov eax, 45  ;45
    mov [carx], eax
    mov [pla1x], eax
+
+   mov eax, 0x2
+   mov [color], eax
+
    call drawPlayer
+
+   
+   
    
    jmp $
 
@@ -73,21 +80,146 @@ Key_Down:
    jmp .done
 
 
-.s:
-   call write_char
-   call validatePos
-   jmp .done
 .w:
-   call write_char
+   mov eax, [pla1Y]
+   dec eax
+   mov [carY], eax
+   mov ecx, eax
+
+   mov eax, [pla1x]
+   mov [carx], eax
+
    call validatePos
+   cmp byte al, 0
+   je .done
+
+   
+   mov [pla1Y], ecx
+
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [pla1Y]
+   add eax, 5 
+   mov [cornerY], eax 
+   mov eax, [pla1x]
+   mov [cornerX], eax
+
+   mov word [width], 5
+   mov word [height],1
+
+   mov eax, 0x09
+   mov [color], eax
+
+
+   call drawBox
    jmp .done
-.a:
-   call write_char
+.s:
+
+   mov eax, [pla1Y]
+   inc eax
+   mov [carY], eax
+   mov ecx, eax
+
+   mov eax, [pla1x]
+   mov [carx], eax
+
    call validatePos
+   cmp byte al, 0
+   je .done
+
+   mov [pla1Y], ecx
+
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [pla1Y]
+   dec eax 
+   mov [cornerY], eax 
+   mov eax, [pla1x]
+   mov [cornerX], eax
+
+   mov word [width], 5
+   mov word [height],1
+
+   mov eax, 0x09
+   mov [color], eax
+
+
+   call drawBox
    jmp .done
-.d: 
-   call write_char
+.d:
+   mov eax, [pla1x]
+   inc eax
+   mov [carx], eax
+   mov ecx, eax
+
+   mov eax, [pla1Y]
+   mov [carY], eax
+
    call validatePos
+   cmp byte al, 0
+   je .done
+
+   mov [pla1x], ecx
+
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [pla1x]
+   dec eax
+   mov [cornerX], eax
+   mov eax, [pla1Y]
+   mov [cornerY], eax
+
+   mov word [height], 5 
+   mov word [width],  1
+
+   mov eax, 0x09
+   mov [color], eax
+
+   call drawBox
+   jmp .done
+.a: 
+   mov eax, [pla1x]
+   dec eax
+   mov [carx], eax
+   mov ecx, eax
+
+   mov eax, [pla1Y]
+   mov [carY], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   mov [pla1x], ecx
+
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [pla1x]
+   add eax, 5
+   mov [cornerX], eax
+   mov eax, [pla1Y]
+   mov [cornerY], eax
+
+   mov word [height], 5 
+   mov word [width],  1
+
+   mov eax, 0x09
+   mov [color], eax
+
+   call drawBox
+
    jmp .done
 
 .done:
@@ -109,6 +241,7 @@ write_char:
 validatePos: 
    mov eax, [carx]
    mov ebx, [carY]
+
 ;First Square verification
    cmp eax, 37
    jl .false
@@ -116,32 +249,33 @@ validatePos:
    cmp eax, 278
    jg .false
 
-   cmp ebx, 25
-   jl .false
+   cmp ebx, 24
+   jle .false
 
    cmp ebx, 170
    jg .false
 
 
 ;.....second square
-   cmp eax, 62
-   jle .true
+   cmp eax, 63
+   jl .true
 
-   cmp eax, 258
-   jl .false
+   cmp eax, 252
+   jg .true
 
-   cmp ebx, 50
-   jge .true
+   cmp ebx, 51
+   jl .true
 
-   mov ebx, [carY]
-   cmp ebx, 145
-   jl .false 
+   cmp ebx, 144
+   jg .true
 
-   jmp .true
+   jmp .false
 
 .false: 
+   mov al, 0
    jmp .done
 .true: 
+   mov al, 1
    jmp .done
 
 .done:
@@ -262,10 +396,9 @@ drawPlayer:
    mov word [height], 5
    mov word [width], 5
 
-   mov eax, 0x1
-   mov [color], eax
-
    call drawBox
+
+   ret
 
 
 

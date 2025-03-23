@@ -41,6 +41,7 @@ wait_enter:
     ret
 
 print_string:
+    
     mov ah, 0x0E           
 .next_char:
     lodsb                  
