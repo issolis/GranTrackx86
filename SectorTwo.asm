@@ -1,5 +1,10 @@
 org 0x7E00
 
+pit_command equ 0x43
+pit_channel_0 equ 0x40
+divisor equ 19886
+ 
+
 ;.....................main....................; 
 
 main:
@@ -19,7 +24,20 @@ main:
    mov [carx], eax
    mov [pla1x], eax
 
-   mov eax, 0x2
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, 95   ;95
+   mov [carY], eax
+   mov [pla2Y], eax
+
+   mov eax, 50  ;45
+   mov [carx], eax
+   mov [pla2x], eax
+
+   mov eax, 0x3
    mov [color], eax
 
    call drawPlayer
@@ -76,6 +94,14 @@ Key_Down:
    je .a
    cmp byte [keyval], 'd'
    je .d
+   cmp byte [keyval], 'i'
+   je .i
+   cmp byte [keyval], 'j'
+   je .j
+   cmp byte [keyval], 'k'
+   je .k
+   cmp byte [keyval], 'l'
+   je .l
 
    jmp .done
 
@@ -221,9 +247,153 @@ Key_Down:
    call drawBox
 
    jmp .done
+.i:
+   mov eax, [pla2Y]
+   dec eax
+   mov [carY], eax
+   mov ecx, eax
+
+   mov eax, [pla2x]
+   mov [carx], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   
+   mov [pla2Y], ecx
+
+   mov eax, 0x3
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [pla2Y]
+   add eax, 5 
+   mov [cornerY], eax 
+   mov eax, [pla2x]
+   mov [cornerX], eax
+
+   mov word [width], 5
+   mov word [height],1
+
+   mov eax, 0x09
+   mov [color], eax
+
+
+   call drawBox
+   jmp .done
+.k:
+
+   mov eax, [pla2Y]
+   inc eax
+   mov [carY], eax
+   mov ecx, eax
+
+   mov eax, [pla2x]
+   mov [carx], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   mov [pla2Y], ecx
+
+   mov eax, 0x3
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [pla2Y]
+   dec eax 
+   mov [cornerY], eax 
+   mov eax, [pla2x]
+   mov [cornerX], eax
+
+   mov word [width], 5
+   mov word [height],1
+
+   mov eax, 0x09
+   mov [color], eax
+
+
+   call drawBox
+   jmp .done
+.l:
+   mov eax, [pla2x]
+   inc eax
+   mov [carx], eax
+   mov ecx, eax
+
+   mov eax, [pla2Y]
+   mov [carY], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   mov [pla2x], ecx
+
+   mov eax, 0x3
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [pla2x]
+   dec eax
+   mov [cornerX], eax
+   mov eax, [pla2Y]
+   mov [cornerY], eax
+
+   mov word [height], 5 
+   mov word [width],  1
+
+   mov eax, 0x09
+   mov [color], eax
+
+   call drawBox
+   jmp .done
+.j: 
+   mov eax, [pla2x]
+   dec eax
+   mov [carx], eax
+   mov ecx, eax
+
+   mov eax, [pla2Y]
+   mov [carY], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   mov [pla2x], ecx
+
+   mov eax, 0x3
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [pla2x]
+   add eax, 5
+   mov [cornerX], eax
+   mov eax, [pla2Y]
+   mov [cornerY], eax
+
+   mov word [height], 5 
+   mov word [width],  1
+
+   mov eax, 0x09
+   mov [color], eax
+
+   call drawBox
+
+   jmp .done
+
 
 .done:
    ret
+
+
 write_char:
 
    ;mov ah, 02h        ; Función: mover cursor
@@ -401,8 +571,34 @@ drawPlayer:
    ret
 
 
-
+;.....................timer.........................;
+Timer_Event:
    
+   ret
+
+
+timer_interrupt:
+   call Timer_Event
+   mov al, 0x20
+   out 0x20, al
+   iret
+
+Timer_Setup:
+   cli 
+   mov al, 00110100b    ; Channel 0, lobyte/hibyte, rate generator
+   out pit_command, al
+       ; Set the divisor
+   mov ax, divisor
+   out pit_channel_0, al    ; Low byte
+   mov al, ah
+   out pit_channel_0, al    ; High byte
+   ; Set up the timer ISR
+   mov word [0x0020], timer_interrupt
+   mov word [0x0022], 0x0000    ; Enable interrupts
+
+   sti 
+   ret
+
 
 ;-------------------Variables and Constans------------------------; 
 scan_code_table:
@@ -410,6 +606,7 @@ scan_code_table:
    db 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0
    db 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'", '`', 0, '\\'
    db 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' '
+
 
 
 drawStart equ 0xA0000
@@ -422,6 +619,8 @@ keyval    db 0
 
 pla1x     dd 0x0
 pla1Y     dd 0x0
+pla2x     dd 0x0
+pla2Y     dd 0x0
 
 carx      dd 0x0
 carY      dd 0x0
