@@ -6,7 +6,7 @@ main:
    mov al, 0x13
    int 0x10
    
- 
+   call SetupKeyboardInterupt
 
    call drawTrack
    call drawFinishLine
@@ -19,8 +19,6 @@ main:
    mov [carx], eax
    mov [pla1x], eax
    call drawPlayer
-
-   call SetupKeyboardInterupt
    
    jmp $
 
@@ -59,21 +57,95 @@ keyboard_handler:
 
 
 Key_Up:
-   call write_char
    ret
 
 
 Key_Down:
+   cmp byte [keyval], 'w'
+   je .w
+   cmp byte [keyval], 's'
+   je .s
+   cmp byte [keyval], 'a'
+   je .a
+   cmp byte [keyval], 'd'
+   je .d
 
+   jmp .done
+
+
+.s:
    call write_char
+   call validatePos
+   jmp .done
+.w:
+   call write_char
+   call validatePos
+   jmp .done
+.a:
+   call write_char
+   call validatePos
+   jmp .done
+.d: 
+   call write_char
+   call validatePos
+   jmp .done
+
+.done:
    ret
 write_char:
+
+   ;mov ah, 02h        ; Función: mover cursor
+   ;mov bh, 0          ; Página de video
+   ;mov dh, 0      ; Fila (0-based)
+   ;mov dl, 0    ; Columna (0-based)
+   ;int 10h    
+   
    mov ah, 0x0E
    mov bl, 0x09
    int 0x10
    ret
 
+;.....motion....;
+validatePos: 
+   mov eax, [carx]
+   mov ebx, [carY]
+;First Square verification
+   cmp eax, 37
+   jl .false
 
+   cmp eax, 278
+   jg .false
+
+   cmp ebx, 25
+   jl .false
+
+   cmp ebx, 170
+   jg .false
+
+
+;.....second square
+   cmp eax, 62
+   jle .true
+
+   cmp eax, 258
+   jl .false
+
+   cmp ebx, 50
+   jge .true
+
+   mov ebx, [carY]
+   cmp ebx, 145
+   jl .false 
+
+   jmp .true
+
+.false: 
+   jmp .done
+.true: 
+   jmp .done
+
+.done:
+   ret
 ;.....................graphic setup..................; 
 fillPixel: 
    push eax
