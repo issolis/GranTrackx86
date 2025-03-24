@@ -587,12 +587,13 @@ Timer_Event:
    xor edx, edx 
    mov ebx, 60 
    div ebx 
-  ; sub eax, 13941
    mov [number], eax
 
    call print_timer_value
    call drawFinishLine
 
+
+   ; first boot
    mov eax, [boot1x]
    mov [bootX], eax
    mov eax, [boot1y]
@@ -602,6 +603,30 @@ Timer_Event:
 
    mov [boot1x], eax
    mov [boot1y], ebx
+
+   ; second boot
+
+   mov eax, [boot2x]
+   mov [bootX], eax
+   mov eax, [boot2y]
+   mov [bootY], eax
+
+   call moveBoot
+
+   mov [boot2x], eax
+   mov [boot2y], ebx
+
+   ;third boot
+
+   mov eax, [boot3x]
+   mov [bootX], eax
+   mov eax, [boot3y]
+   mov [bootY], eax
+
+   call moveBoot
+
+   mov [boot3x], eax
+   mov [boot3y], ebx
    sti
    ret
 
@@ -931,7 +956,11 @@ pla2x     dd 0x0
 pla2Y     dd 0x0
 
 boot1y    dd 95
-boot1x    dd 45
+boot1x    dd 40
+boot2y    dd 95
+boot2x    dd 50
+boot3y    dd 95
+boot3x    dd 60
 bootY    dd 0x0
 bootX    dd 0x0
 
