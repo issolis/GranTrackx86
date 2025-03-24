@@ -42,6 +42,8 @@ main:
 
    call drawPlayer
 
+   call Timer_Setup
+
    
    
    
@@ -85,7 +87,9 @@ Key_Up:
    ret
 
 
-Key_Down:
+Key_Down:   
+   
+
    cmp byte [keyval], 'w'
    je .w
    cmp byte [keyval], 's'
@@ -108,7 +112,7 @@ Key_Down:
 
 .w:
    mov eax, [pla1Y]
-   dec eax
+   sub eax, 3
    mov [carY], eax
    mov ecx, eax
 
@@ -134,7 +138,7 @@ Key_Down:
    mov [cornerX], eax
 
    mov word [width], 5
-   mov word [height],1
+   mov word [height],3
 
    mov eax, 0x09
    mov [color], eax
@@ -145,7 +149,7 @@ Key_Down:
 .s:
 
    mov eax, [pla1Y]
-   inc eax
+   add eax, 3
    mov [carY], eax
    mov ecx, eax
 
@@ -164,13 +168,13 @@ Key_Down:
    call drawPlayer
 
    mov eax, [pla1Y]
-   dec eax 
+   sub eax, 3 
    mov [cornerY], eax 
    mov eax, [pla1x]
    mov [cornerX], eax
 
    mov word [width], 5
-   mov word [height],1
+   mov word [height],3
 
    mov eax, 0x09
    mov [color], eax
@@ -180,7 +184,7 @@ Key_Down:
    jmp .done
 .d:
    mov eax, [pla1x]
-   inc eax
+   add eax, 3
    mov [carx], eax
    mov ecx, eax
 
@@ -199,13 +203,13 @@ Key_Down:
    call drawPlayer
 
    mov eax, [pla1x]
-   dec eax
+   sub eax, 3
    mov [cornerX], eax
    mov eax, [pla1Y]
    mov [cornerY], eax
 
    mov word [height], 5 
-   mov word [width],  1
+   mov word [width],  3
 
    mov eax, 0x09
    mov [color], eax
@@ -214,7 +218,7 @@ Key_Down:
    jmp .done
 .a: 
    mov eax, [pla1x]
-   dec eax
+   sub eax, 3
    mov [carx], eax
    mov ecx, eax
 
@@ -239,7 +243,7 @@ Key_Down:
    mov [cornerY], eax
 
    mov word [height], 5 
-   mov word [width],  1
+   mov word [width],  3
 
    mov eax, 0x09
    mov [color], eax
@@ -249,7 +253,7 @@ Key_Down:
    jmp .done
 .i:
    mov eax, [pla2Y]
-   dec eax
+   sub eax, 3
    mov [carY], eax
    mov ecx, eax
 
@@ -275,7 +279,7 @@ Key_Down:
    mov [cornerX], eax
 
    mov word [width], 5
-   mov word [height],1
+   mov word [height],3
 
    mov eax, 0x09
    mov [color], eax
@@ -286,7 +290,7 @@ Key_Down:
 .k:
 
    mov eax, [pla2Y]
-   inc eax
+   add eax, 3
    mov [carY], eax
    mov ecx, eax
 
@@ -305,13 +309,13 @@ Key_Down:
    call drawPlayer
 
    mov eax, [pla2Y]
-   dec eax 
+   sub eax, 3 
    mov [cornerY], eax 
    mov eax, [pla2x]
    mov [cornerX], eax
 
    mov word [width], 5
-   mov word [height],1
+   mov word [height],3
 
    mov eax, 0x09
    mov [color], eax
@@ -321,7 +325,7 @@ Key_Down:
    jmp .done
 .l:
    mov eax, [pla2x]
-   inc eax
+   add eax, 3
    mov [carx], eax
    mov ecx, eax
 
@@ -340,13 +344,13 @@ Key_Down:
    call drawPlayer
 
    mov eax, [pla2x]
-   dec eax
+   sub eax, 3
    mov [cornerX], eax
    mov eax, [pla2Y]
    mov [cornerY], eax
 
    mov word [height], 5 
-   mov word [width],  1
+   mov word [width],  3
 
    mov eax, 0x09
    mov [color], eax
@@ -355,7 +359,7 @@ Key_Down:
    jmp .done
 .j: 
    mov eax, [pla2x]
-   dec eax
+   sub eax, 3
    mov [carx], eax
    mov ecx, eax
 
@@ -380,7 +384,7 @@ Key_Down:
    mov [cornerY], eax
 
    mov word [height], 5 
-   mov word [width],  1
+   mov word [width],  3
 
    mov eax, 0x09
    mov [color], eax
@@ -573,9 +577,18 @@ drawPlayer:
 
 ;.....................timer.........................;
 Timer_Event:
-   
-   ret
+   cli
+   mov eax, [timer]
+   inc eax
+   mov [timer], eax
 
+   mov ebx, 60 
+   div ebx 
+   mov [number], eax
+   call drawFinishLine
+   call print_timer_value
+   sti
+   ret
 
 timer_interrupt:
    call Timer_Event
@@ -585,21 +598,66 @@ timer_interrupt:
 
 Timer_Setup:
    cli 
-   mov al, 00110100b    ; Channel 0, lobyte/hibyte, rate generator
+   mov al, 00110100b                      ; Channel 0, lobyte/hibyte, rate generator
    out pit_command, al
-       ; Set the divisor
+   ; Set the divisor
    mov ax, divisor
-   out pit_channel_0, al    ; Low byte
+   out pit_channel_0, al                  ; Low byte
    mov al, ah
-   out pit_channel_0, al    ; High byte
+   out pit_channel_0, al                  ; High byte
    ; Set up the timer ISR
    mov word [0x0020], timer_interrupt
-   mov word [0x0022], 0x0000    ; Enable interrupts
+   mov word [0x0022], 0x0000              ; Enable interrupts
 
    sti 
    ret
 
+;.......................print..........................;
+print_timer_value:
+    ; Convertir valor numérico de 'timer' a cadena decimal
+    mov eax, [number]           ; Cargar el valor de 'timer' en EAX
 
+    lea di, [string + 5] ; DI ← dirección del último carácter (al final de la cadena de 5 dígitos)
+
+    ; Vamos a convertir EAX a decimal y ponerlo en los 5 dígitos de timer_string
+    mov cx, 5                  ; Necesitamos 5 dígitos
+.convert_loop:
+    xor edx, edx               ; Limpiar EDX (división de 32 bits requiere EDX:EAX)
+    mov ebx, 10                ; Divisor = 10 para extraer dígitos decimales
+    div ebx                    ; EAX / 10 → cociente en EAX, residuo (dígito) en EDX
+    add dl, '0'                ; Convertimos el dígito a ASCII ('0'..'9')
+    
+    mov [di-1], dl             ; Escribimos el dígito al revés (de derecha a izquierda)
+    dec di                     ; Mover DI hacia atrás para el siguiente dígito
+
+    loop .convert_loop         ; Repetimos para los siguientes dígitos
+
+    ; Mostrar la cadena actualizada (timer_string)
+    lea si, [string]     ; Cargar la dirección de 'timer_string'
+    call print_string          ; Mostrar la cadena con el número actualizado
+
+    ret                        ; Fin de print_timer_value
+
+
+print_string:
+    ; Mover el cursor a la posición (0, 0)
+    mov ah, 0x02              ; Función para mover el cursor
+    mov bh, 0x00              ; Página de video (0 para la pantalla principal)
+    mov dh, 0x00              ; Fila (0 para la primera fila)
+    mov dl, 0x00              ; Columna (0 para la primera columna)
+    int 0x10                  ; Llamar a la interrupción para mover el cursor
+
+    ; Imprimir la cadena
+.print_char:
+    mov al, [si]              ; Cargar el siguiente carácter de la cadena
+    inc si                    ; Avanzar al siguiente carácter de la cadena
+    cmp al, 0                 ; Comprobar si es el fin de la cadena (carácter nulo)
+    je .done                  ; Si es nulo, terminamos
+    mov ah, 0x0E              ; Función para imprimir un carácter en pantalla (modo texto)
+    int 0x10                  ; Llamar a la interrupción de video para imprimir
+    jmp .print_char           ; Volver al siguiente carácter
+.done:
+    ret                       ; Fin de la rutina
 ;-------------------Variables and Constans------------------------; 
 scan_code_table:
    db 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0
@@ -615,12 +673,16 @@ cornerX   dd 0x10
 height    dd 0x40
 width     dd 0x40
 color     dd 0x05
-keyval    db 0
+keyval    db 0x0
 
 pla1x     dd 0x0
 pla1Y     dd 0x0
 pla2x     dd 0x0
 pla2Y     dd 0x0
+
+number dd 0x0    
+timer dd 0x0                   ; Temporizador en valor numérico
+string db '00000', 0
 
 carx      dd 0x0
 carY      dd 0x0
