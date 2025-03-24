@@ -42,6 +42,9 @@ main:
 
    call drawPlayer
 
+   mov eax, 0
+   mov [timer], eax
+   call boots
    call Timer_Setup
 
    
@@ -581,12 +584,24 @@ Timer_Event:
    mov eax, [timer]
    inc eax
    mov [timer], eax
-
+   xor edx, edx 
    mov ebx, 60 
    div ebx 
+  ; sub eax, 13941
    mov [number], eax
-   call drawFinishLine
+
    call print_timer_value
+   call drawFinishLine
+
+   mov eax, [boot1x]
+   mov [bootX], eax
+   mov eax, [boot1y]
+   mov [bootY], eax
+
+   call moveBoot
+
+   mov [boot1x], eax
+   mov [boot1y], ebx
    sti
    ret
 
@@ -658,6 +673,241 @@ print_string:
     jmp .print_char           ; Volver al siguiente carácter
 .done:
     ret                       ; Fin de la rutina
+;..........................boots......................;
+
+boots: 
+   mov eax, 95   ;95
+   mov [carY], eax
+
+   mov eax, 45  ;45
+   mov [carx], eax
+
+   mov eax, 0x4
+   mov [color], eax
+
+   call drawPlayer
+   mov eax, 95   ;95
+   mov [carY], eax
+
+   mov eax, 55  ;45
+   mov [carx], eax
+
+   mov eax, 0x5
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, 95   ;95
+   mov [carY], eax
+
+   mov eax, 50  ;45
+   mov [carx], eax
+
+   mov eax, 0x6
+   mov [color], eax
+
+   call drawPlayer
+
+   ret
+
+
+
+
+moveBoot: 
+
+   mov ecx, [bootY]
+   mov eax, 155
+   cmp ecx, eax
+   jge .fourthLine
+
+   mov ecx, [bootX]
+   mov eax, 270
+   cmp ecx, eax
+   jge .thirdLine
+
+   mov ecx, [bootY]
+   mov eax, 45
+   cmp ecx, eax
+   jle .secondLine
+
+
+
+   jmp .firstLine
+   
+.firstLine: 
+   
+
+   mov eax, [bootY]
+   dec eax
+   mov [carY], eax
+   mov ecx, eax
+
+   mov eax, [bootX]
+   mov [carx], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   
+   mov [bootY], ecx
+
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [bootY]
+   add eax, 5 
+   mov [cornerY], eax 
+   mov eax, [bootX]
+   mov [cornerX], eax
+
+   mov word [width], 5
+   mov word [height],1
+
+   mov eax, 0x09
+   mov [color], eax
+
+
+   call drawBox
+   jmp .done
+
+.secondLine: 
+
+   mov ecx, [bootX]
+   mov eax, 270
+   cmp ecx, eax
+   jge .done
+
+   mov eax, [bootX]
+   inc eax
+   mov [carx], eax
+   mov ecx, eax
+
+   mov eax, [bootY]
+   mov [carY], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   mov [bootX], ecx
+
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [bootX]
+   dec eax
+   mov [cornerX], eax
+   mov eax, [bootY]
+   mov [cornerY], eax
+
+   mov word [height], 5 
+   mov word [width],  1
+
+   mov eax, 0x09
+   mov [color], eax
+
+   call drawBox
+
+   jmp .done
+
+.thirdLine: 
+   mov ecx, [bootY]
+   mov eax, 155
+   cmp ecx, eax
+   jge .done
+
+   mov eax, [bootY]
+   inc eax
+   mov [carY], eax
+   mov ecx, eax
+
+   mov eax, [bootX]
+   mov [carx], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   
+   mov [bootY], ecx
+
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [bootY]
+   dec eax
+   mov [cornerY], eax 
+   mov eax, [bootX]
+   mov [cornerX], eax
+
+   mov word [width], 5
+   mov word [height],1
+
+   mov eax, 0x09
+   mov [color], eax
+
+
+   call drawBox
+   jmp .done
+
+.fourthLine: 
+   mov ecx, [bootX]
+   mov eax, 45
+   cmp ecx, eax
+   jle .firstLine
+
+   mov eax, [bootX]
+   dec eax
+   mov [carx], eax
+   mov ecx, eax
+
+   mov eax, [bootY]
+   mov [carY], eax
+
+   call validatePos
+   cmp byte al, 0
+   je .done
+
+   mov [bootX], ecx
+
+   mov eax, 0x1
+   mov [color], eax
+
+   call drawPlayer
+
+   mov eax, [bootX]
+   add eax, 5
+   mov [cornerX], eax
+   mov eax, [bootY]
+   mov [cornerY], eax
+
+   mov word [height], 5 
+   mov word [width],  1
+
+   mov eax, 0x09
+   mov [color], eax
+
+   call drawBox
+
+   jmp .done
+
+   
+
+
+.done: 
+   mov eax, [bootX]
+   mov ebx, [bootY]
+
+   ret 
+
+
 ;-------------------Variables and Constans------------------------; 
 scan_code_table:
    db 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0
@@ -680,10 +930,14 @@ pla1Y     dd 0x0
 pla2x     dd 0x0
 pla2Y     dd 0x0
 
+boot1y    dd 95
+boot1x    dd 45
+bootY    dd 0x0
+bootX    dd 0x0
+
 number dd 0x0    
 timer dd 0x0                   ; Temporizador en valor numérico
 string db '00000', 0
 
 carx      dd 0x0
 carY      dd 0x0
-
