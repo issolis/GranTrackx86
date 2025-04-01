@@ -671,6 +671,85 @@ drawPlayer:
    ret
 
 
+;........Winner.....................................;
+
+printWinner: 
+   mov eax, [indexBP]
+   mov byte [row], 1
+   mov byte [column], 10
+  
+
+   cmp eax, 1
+   je .p1Won
+   cmp eax, 2
+   je .p2Won
+   cmp eax, 3
+   je .B1Won
+   cmp eax, 4
+   je .B2Won
+   cmp eax, 5
+   je .B3Won
+
+   jmp .done
+
+
+
+.p1Won: 
+   lea si, [wonMessageP1]
+   call print_string
+   
+   mov word [cornerY], 20
+   mov word [cornerX], 0x20
+
+   mov word [height], 160
+   mov word [width], 256
+
+   mov eax, 0x1
+   mov [color], eax
+   call drawBox
+   
+   
+   jmp .done
+.p2Won: 
+   lea si, [wonMessageP2]
+   call print_string
+   mov word [cornerY], 20
+   mov word [cornerX], 0x20
+
+   mov word [height], 160
+   mov word [width], 256
+
+   mov eax, 0x77
+   mov [color], eax
+   call drawBox
+   
+   jmp .done
+.B1Won: 
+   jmp .done
+.B2Won: 
+   jmp .done
+.B3Won: 
+   lea si, [wonMessageB3]  
+   call print_string
+   mov word [cornerY], 20
+   mov word [cornerX], 0x20
+
+   mov word [height], 160
+   mov word [width], 256
+
+   mov eax, 0x2
+   mov [color], eax
+   call drawBox
+   
+   jmp .done
+
+
+.done: 
+   ret 
+
+
+
+
 ;.....................timer.........................;
 
 
@@ -686,11 +765,89 @@ Timer_Event:
    mov ebx, 60 
    div ebx
 
-   mov ebx, 11
+   mov ebx, 20
    cmp eax, ebx
    jl .notFinished
 
+;; Finish
+   
 
+   mov eax, [pointsP1]
+   mov [pointsBP], eax 
+   mov eax, 1
+   mov [indexBP], eax
+
+   mov ebx, [pointsP2]
+   mov eax, [pointsBP]
+   cmp ebx, eax
+   jl .nextComp1
+
+   mov [pointsBP], ebx
+   mov eax, 2
+   mov [indexBP], eax
+
+
+   jmp  .nextComp1
+
+.nextComp1: 
+
+   mov ebx, [pointsB1]
+   mov eax, [pointsBP]
+   cmp ebx, eax
+   jl .nextComp2
+
+   
+
+   mov [pointsBP], ebx
+   mov eax, 3
+   mov [indexBP], eax
+
+   jmp .nextComp2
+
+
+.nextComp2:
+
+   mov ebx, [pointsB2]
+   mov eax, [pointsBP]
+   cmp ebx, eax
+   jl .nextComp3
+
+   mov [pointsBP], ebx
+   mov eax, 4
+   mov [indexBP], eax
+
+
+   jmp .nextComp3
+
+.nextComp3:
+
+   mov ebx, [pointsB3]
+   mov eax, [pointsBP]
+   cmp ebx, eax
+   jl .end
+
+   mov [pointsBP], ebx
+   mov eax, 5
+   mov [indexBP], eax
+
+
+   jmp .end
+
+.end: 
+   mov eax, [isdone]
+   mov ebx, 1
+   cmp eax, ebx
+   je .final 
+
+   call printWinner
+ 
+   mov eax, 1
+   mov [isdone], eax
+
+   jmp .final
+
+.final:   
+   ret
 
 
  
@@ -936,9 +1093,6 @@ countingPoints:
 
 .done: 
    ret
-;...................choose winer......................; 
-
-
 
 ;..........................boots......................;
 
@@ -1133,16 +1287,6 @@ moveBoot:
 
 ;-------------------Variables and Constans------------------------; 
 
-wholeBlack: 
-   mov word [cornerY], 20
-   mov word [cornerX], 0x20
-
-   mov word [height], 200
-   mov word [width], 320
-
-   mov eax, 0x0
-   mov [color], eax
-   call drawBox
 
 scan_code_table:
    db 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0
@@ -1215,3 +1359,5 @@ wonMessageB3 db 'Player 5 won the game', 0
 
 carx      dd 0x0
 carY      dd 0x0
+
+isdone  dd 0x0

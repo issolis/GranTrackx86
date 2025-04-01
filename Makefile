@@ -11,7 +11,7 @@ ASM_FLAGS = -f bin
 QEMU = qemu-system-x86_64
 QEMU_FLAGS = -drive format=raw,file=$(FINAL_BIN)
 
-PAD_SIZE = 3072  # 6 sectores * 512 bytes
+PAD_SIZE = 4096  # 6 sectores * 512 bytes
 
 all: $(FINAL_BIN)
 	$(QEMU) $(QEMU_FLAGS)

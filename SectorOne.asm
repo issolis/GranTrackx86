@@ -21,7 +21,7 @@ start:
 
 PrepSectorTwo:
    mov ah, 0x02    ; BIOS read sector
-   mov al, 6       ; Number of sectors
+   mov al, 8       ; Number of sectors
    mov ch, 0       ; Cylinder number
    mov dh, 0       ; Head number
    mov cl, 2       ; Sector number
