@@ -33,7 +33,7 @@ main:
    mov [carY], eax
    mov [pla2Y], eax
 
-   mov eax, 50  ;45
+   mov eax, 55  ;45
    mov [carx], eax
    mov [pla2x], eax
 
@@ -589,7 +589,7 @@ Timer_Event:
    mov ebx, 60 
    div ebx 
    mov [number], eax
-
+   mov byte [row], 0x0
    call print_timer_value
    ;----Finish Line----;
    call drawFinishLine
@@ -640,6 +640,40 @@ Timer_Event:
 
    mov [boot3x], eax
    mov [boot3y], ebx
+
+   ;....Counting playes points....; 
+   mov eax, [followTrackP1]
+   mov [followTrackP], eax
+   mov eax, [pla1Y]
+   mov [plaYT], eax
+   mov eax, [pointsP1]
+   mov [points], eax
+   call countingPoints
+   mov eax, [followTrackP]
+   mov [followTrackP1], eax
+   mov eax, [points]
+   mov [pointsP1], eax
+   mov [number], eax
+
+   mov byte [row], 0x1
+   call print_timer_value
+
+   mov eax, [followTrackP2]
+   mov [followTrackP], eax
+   mov eax, [pla2Y]
+   mov [plaYT], eax
+   mov eax, [pointsP2]
+   mov [points], eax
+   call countingPoints
+   mov eax, [followTrackP]
+   mov [followTrackP2], eax
+   mov eax, [points]
+   mov [pointsP2], eax
+   mov [number], eax
+
+   mov byte [row], 0x2
+   call print_timer_value
+
    sti
    ret
 
@@ -695,8 +729,8 @@ print_timer_value:
 print_string:
     ; Mover el cursor a la posición (0, 0)
     mov ah, 0x02              
-    mov bh, 0x00               
-    mov dh, 0x00            
+    mov bh, 0x00                
+    mov dh, [row]            
     mov dl, 0x00            
     int 0x10                
 .print_char:
@@ -711,6 +745,41 @@ print_string:
     ret                       ; Fin de la rutina
 
 ;....................counting points..................; 
+
+countingPoints: 
+   mov eax, [followTrackP]
+   mov ebx, 1
+   cmp eax, ebx
+   jne .firstTrack 
+
+   mov eax, [plaYT]
+   mov ebx, 100
+   cmp eax, ebx
+   jge .done
+
+   mov eax, [points]
+   inc eax
+   mov [points], eax 
+   mov eax, 0
+   mov [followTrackP], eax
+
+   jmp .done
+
+   
+.firstTrack: 
+
+   mov eax, [plaYT]
+   mov ebx, 145
+   cmp eax, ebx
+   jl .done
+
+   mov eax, 1
+   mov [followTrackP], eax
+
+
+.done: 
+   ret
+
 ;..........................boots......................;
 
 boots: 
@@ -937,6 +1006,14 @@ pointsP2 dd 0x0
 pointsB1 dd 0x0
 pointsB2 dd 0x0
 pointsB3 dd 0x0
+points   dd 0x0
+
+followTrackP1 dd 0x0
+followTrackP2 dd 0x0
+followTrackP dd 0x0
+plaYT        dd 0x0
+
+row db 0x0
 
 number dd 0x0    
 timer dd 0x0                   ; Temporizador en valor numérico
