@@ -11,8 +11,6 @@ main:
    mov al, 0x13
    int 0x10
    
-   call SetupKeyboardInterupt
-
    call drawTrack
    
 
@@ -37,7 +35,7 @@ main:
    mov [carx], eax
    mov [pla2x], eax
 
-   mov eax, 0x3
+   mov eax, 0x77
    mov [color], eax
 
    call drawPlayer
@@ -46,9 +44,43 @@ main:
    mov [timer], eax
    call boots
    call Timer_Setup
+   call SetupKeyboardInterupt
 
-   
-   
+   mov byte [column], 0
+   lea si, [timerText]
+   call print_string
+   mov byte [column], 2
+
+   mov byte [column], 0
+   mov byte [row], 1
+   lea si, [p1text]
+   call print_string
+   mov byte [column], 2
+
+   mov byte [column], 0
+   mov byte [row], 2
+   lea si, [p2text]
+   call print_string
+   mov byte [column], 2
+
+   mov byte [column], 0
+   mov byte [row], 3
+   lea si, [B1text]
+   call print_string
+   mov byte [column], 2
+
+   mov byte [column], 0
+   mov byte [row],4
+   lea si, [B2text]
+   call print_string
+   mov byte [column], 2
+
+   mov byte [column], 0
+   mov byte [row],5
+   lea si, [B3text]
+   call print_string
+   mov byte [column], 2
+  
    
    jmp $
 
@@ -234,7 +266,7 @@ Key_Down:
 
    mov [pla1x], ecx
 
-   mov eax, 0x1
+   mov eax, 0x01
    mov [color], eax
 
    call drawPlayer
@@ -270,7 +302,7 @@ Key_Down:
    
    mov [pla2Y], ecx
 
-   mov eax, 0x3
+   mov eax, 0x77
    mov [color], eax
 
    call drawPlayer
@@ -306,7 +338,7 @@ Key_Down:
 
    mov [pla2Y], ecx
 
-   mov eax, 0x3
+   mov eax, 0x77
    mov [color], eax
 
    call drawPlayer
@@ -341,7 +373,7 @@ Key_Down:
 
    mov [pla2x], ecx
 
-   mov eax, 0x3
+   mov eax, 0x77
    mov [color], eax
 
    call drawPlayer
@@ -375,7 +407,7 @@ Key_Down:
 
    mov [pla2x], ecx
 
-   mov eax, 0x3
+   mov eax, 0x77
    mov [color], eax
 
    call drawPlayer
@@ -594,7 +626,7 @@ Timer_Event:
    ;----Finish Line----;
    call drawFinishLine
 
-
+ 
    ;----Boots motion----; 
    ; first boot
    mov eax, [boot1x]
@@ -674,6 +706,54 @@ Timer_Event:
    mov byte [row], 0x2
    call print_timer_value
 
+   mov eax, [followTrackB1]
+   mov [followTrackP], eax
+   mov eax, [boot1y]
+   mov [plaYT], eax
+   mov eax, [pointsB1]
+   mov [points], eax
+   call countingPoints
+   mov eax, [followTrackP]
+   mov [followTrackB1], eax
+   mov eax, [points]
+   mov [pointsB1], eax
+   mov [number], eax
+
+   mov byte [row], 0x3
+   call print_timer_value
+
+   mov eax, [followTrackB2]
+   mov [followTrackP], eax
+   mov eax, [boot2y]
+   mov [plaYT], eax
+   mov eax, [pointsB2]
+   mov [points], eax
+   call countingPoints
+   mov eax, [followTrackP]
+   mov [followTrackB2], eax
+   mov eax, [points]
+   mov [pointsB2], eax
+   mov [number], eax
+
+   mov byte [row], 0x4
+   call print_timer_value
+
+   mov eax, [followTrackB3]
+   mov [followTrackP], eax
+   mov eax, [boot3y]
+   mov [plaYT], eax
+   mov eax, [pointsB3]
+   mov [points], eax
+   call countingPoints
+   mov eax, [followTrackP]
+   mov [followTrackB3], eax
+   mov eax, [points]
+   mov [pointsB3], eax
+   mov [number], eax
+
+   mov byte [row], 0x5
+   call print_timer_value
+
    sti
    ret
 
@@ -701,28 +781,22 @@ Timer_Setup:
 
 ;.......................print..........................;
 print_timer_value:
-    ; Convertir valor numérico de 'timer' a cadena decimal
-    mov eax, [number]           ; Cargar el valor de 'timer' en EAX
+    mov eax, [number]           
 
-    lea di, [string + 3] ; DI ← dirección del último carácter (al final de la cadena de 5 dígitos)
-
-    ; Vamos a convertir EAX a decimal y ponerlo en los 5 dígitos de timer_string
-    mov cx, 3                  ; Necesitamos 5 dígitos
+    lea di, [string + 2] 
+    mov cx, 2                  
 .convert_loop:
-    xor edx, edx               ; Limpiar EDX (división de 32 bits requiere EDX:EAX)
-    mov ebx, 10                ; Divisor = 10 para extraer dígitos decimales
-    div ebx                    ; EAX / 10 → cociente en EAX, residuo (dígito) en EDX
-    add dl, '0'                ; Convertimos el dígito a ASCII ('0'..'9')
+    xor edx, edx               
+    mov ebx, 10                
+    div ebx                    
+    add dl, '0'                
     
-    mov [di-1], dl             ; Escribimos el dígito al revés (de derecha a izquierda)
-    dec di                     ; Mover DI hacia atrás para el siguiente dígito
+    mov [di-1], dl             
+    dec di                     
 
-    loop .convert_loop         ; Repetimos para los siguientes dígitos
-
-    ; Mostrar la cadena actualizada (timer_string)
-    lea si, [string]     ; Cargar la dirección de 'timer_string'
-    call print_string          ; Mostrar la cadena con el número actualizado
-
+    loop .convert_loop         
+    lea si, [string]     
+    call print_string          
     ret                        ; Fin de print_timer_value
 
 
@@ -731,7 +805,7 @@ print_string:
     mov ah, 0x02              
     mov bh, 0x00                
     mov dh, [row]            
-    mov dl, 0x00            
+    mov dl, [column]            
     int 0x10                
 .print_char:
     mov al, [si]              
@@ -779,24 +853,83 @@ countingPoints:
 
 .done: 
    ret
+;...................choose winer......................; 
+
+chooseWiner: 
+   mov eax, [pointsP1]
+   mov [pointsBP], eax 
+   mov eax, 1
+   mov [indexBP], eax
+
+.firstComp:
+   mov eax, [pointsBP]
+   mov ebx, [pointsP2]
+
+   cmp ebx,eax 
+   jle .secondComp
+
+   mov [pointsBP], ebx
+   mov eax, 2
+   mov [indexBP], eax
+
+.secondComp: 
+   mov eax, [pointsBP]
+   mov ebx, [pointsB1]
+
+   cmp ebx,eax 
+   jle .thirdComp
+
+   mov [pointsBP], ebx
+   mov eax, 3
+   mov [indexBP], eax
+
+.thirdComp: 
+   mov eax, [pointsBP]
+   mov ebx, [pointsB2]
+
+   cmp ebx,eax 
+   jle .fourthComp
+
+   mov [pointsBP], ebx
+   mov eax, 4
+   mov [indexBP], eax
+
+.fourthComp:
+   mov eax, [pointsBP]
+   mov ebx, [pointsB3]
+
+   cmp ebx,eax 
+   jle .fourthComp
+
+   mov [pointsBP], ebx
+   mov eax, 5
+   mov [indexBP], eax
+
+   jmp .done
+
+.done: 
+   ret
+   
+
+
 
 ;..........................boots......................;
 
 boots: 
-   mov eax, 95   ;95
+   mov eax, [boot1y]   ;95
    mov [carY], eax
 
-   mov eax, 45  ;45
+   mov eax, [boot1x]  ;45
    mov [carx], eax
 
    mov eax, 0x4
    mov [color], eax
 
    call drawPlayer
-   mov eax, 95   ;95
+   mov eax, [boot2y]   ;95
    mov [carY], eax
 
-   mov eax, 55  ;45
+   mov eax, [boot2x]  ;45
    mov [carx], eax
 
    mov eax, 0x5
@@ -804,10 +937,10 @@ boots:
 
    call drawPlayer
 
-   mov eax, 95   ;95
+   mov eax, [boot3y]   ;95
    mov [carY], eax
 
-   mov eax, 50  ;45
+   mov eax, [boot3x] ;45
    mov [carx], eax
 
    mov eax, 0x6
@@ -821,7 +954,6 @@ boots:
 
 
 moveBoot: 
-
    mov ecx, [bootY]
    mov eax, 155
    cmp ecx, eax
@@ -843,7 +975,6 @@ moveBoot:
    
 .firstLine: 
    
-
    mov eax, [bootY]
    dec eax
    mov [carY], eax
@@ -970,7 +1101,7 @@ moveBoot:
    ret 
 
 
-;-------------------Variables and Constans------------------------; }
+;-------------------Variables and Constans------------------------; 
 scan_code_table:
    db 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0
    db 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0
@@ -1010,17 +1141,28 @@ points   dd 0x0
 
 followTrackP1 dd 0x0
 followTrackP2 dd 0x0
+followTrackB1 dd 0x0
+followTrackB2 dd 0x0
+followTrackB3 dd 0x0
+
 followTrackP dd 0x0
 plaYT        dd 0x0
 
 row db 0x0
+column db 0x2
+
+pointsBP dd 0x0
+indexBP  dd 0x0
+
 
 number dd 0x0    
 timer dd 0x0                   ; Temporizador en valor numérico
-string db '000', 0
-
-
-
-
+string db '00', 0
+timerText db 'Ti', 0
+p1text db 'P1', 0
+p2text db 'P2', 0
+B1text db 'B1', 0
+B2text db 'B2', 0
+B3text db 'B3', 0
 carx      dd 0x0
 carY      dd 0x0
