@@ -14,7 +14,7 @@ main:
    call SetupKeyboardInterupt
 
    call drawTrack
-   call drawFinishLine
+   
 
    mov eax, 95   ;95
    mov [carY], eax
@@ -580,6 +580,7 @@ drawPlayer:
 
 ;.....................timer.........................;
 Timer_Event:
+   ;---Timer---;
    cli
    mov eax, [timer]
    inc eax
@@ -590,14 +591,20 @@ Timer_Event:
    mov [number], eax
 
    call print_timer_value
+   ;----Finish Line----;
    call drawFinishLine
 
 
+   ;----Boots motion----; 
    ; first boot
    mov eax, [boot1x]
    mov [bootX], eax
    mov eax, [boot1y]
    mov [bootY], eax
+   mov eax, 0x55
+   mov [color], eax
+
+
 
    call moveBoot
 
@@ -610,6 +617,9 @@ Timer_Event:
    mov [bootX], eax
    mov eax, [boot2y]
    mov [bootY], eax
+   mov eax, 0x3
+   mov [color], eax
+
 
    call moveBoot
 
@@ -622,6 +632,9 @@ Timer_Event:
    mov [bootX], eax
    mov eax, [boot3y]
    mov [bootY], eax
+   mov eax, 0x2
+   mov [color], eax
+
 
    call moveBoot
 
@@ -657,10 +670,10 @@ print_timer_value:
     ; Convertir valor numérico de 'timer' a cadena decimal
     mov eax, [number]           ; Cargar el valor de 'timer' en EAX
 
-    lea di, [string + 5] ; DI ← dirección del último carácter (al final de la cadena de 5 dígitos)
+    lea di, [string + 3] ; DI ← dirección del último carácter (al final de la cadena de 5 dígitos)
 
     ; Vamos a convertir EAX a decimal y ponerlo en los 5 dígitos de timer_string
-    mov cx, 5                  ; Necesitamos 5 dígitos
+    mov cx, 3                  ; Necesitamos 5 dígitos
 .convert_loop:
     xor edx, edx               ; Limpiar EDX (división de 32 bits requiere EDX:EAX)
     mov ebx, 10                ; Divisor = 10 para extraer dígitos decimales
@@ -681,23 +694,23 @@ print_timer_value:
 
 print_string:
     ; Mover el cursor a la posición (0, 0)
-    mov ah, 0x02              ; Función para mover el cursor
-    mov bh, 0x00              ; Página de video (0 para la pantalla principal)
-    mov dh, 0x00              ; Fila (0 para la primera fila)
-    mov dl, 0x00              ; Columna (0 para la primera columna)
-    int 0x10                  ; Llamar a la interrupción para mover el cursor
-
-    ; Imprimir la cadena
+    mov ah, 0x02              
+    mov bh, 0x00               
+    mov dh, 0x00            
+    mov dl, 0x00            
+    int 0x10                
 .print_char:
-    mov al, [si]              ; Cargar el siguiente carácter de la cadena
-    inc si                    ; Avanzar al siguiente carácter de la cadena
-    cmp al, 0                 ; Comprobar si es el fin de la cadena (carácter nulo)
-    je .done                  ; Si es nulo, terminamos
-    mov ah, 0x0E              ; Función para imprimir un carácter en pantalla (modo texto)
-    int 0x10                  ; Llamar a la interrupción de video para imprimir
-    jmp .print_char           ; Volver al siguiente carácter
+    mov al, [si]              
+    inc si                    
+    cmp al, 0                
+    je .done                  
+    mov ah, 0x0E              
+    int 0x10                  
+    jmp .print_char           
 .done:
     ret                       ; Fin de la rutina
+
+;....................counting points..................; 
 ;..........................boots......................;
 
 boots: 
@@ -765,20 +778,10 @@ moveBoot:
    mov eax, [bootY]
    dec eax
    mov [carY], eax
-   mov ecx, eax
+   mov [bootY], eax
 
    mov eax, [bootX]
    mov [carx], eax
-
-   call validatePos
-   cmp byte al, 0
-   je .done
-
-   
-   mov [bootY], ecx
-
-   mov eax, 0x1
-   mov [color], eax
 
    call drawPlayer
 
@@ -799,28 +802,14 @@ moveBoot:
    jmp .done
 
 .secondLine: 
-
-   mov ecx, [bootX]
-   mov eax, 270
-   cmp ecx, eax
-   jge .done
-
    mov eax, [bootX]
    inc eax
+
+   mov [bootX], eax
    mov [carx], eax
-   mov ecx, eax
 
    mov eax, [bootY]
    mov [carY], eax
-
-   call validatePos
-   cmp byte al, 0
-   je .done
-
-   mov [bootX], ecx
-
-   mov eax, 0x1
-   mov [color], eax
 
    call drawPlayer
 
@@ -848,21 +837,12 @@ moveBoot:
 
    mov eax, [bootY]
    inc eax
+
    mov [carY], eax
-   mov ecx, eax
+   mov [bootY], eax
 
    mov eax, [bootX]
    mov [carx], eax
-
-   call validatePos
-   cmp byte al, 0
-   je .done
-
-   
-   mov [bootY], ecx
-
-   mov eax, 0x1
-   mov [color], eax
 
    call drawPlayer
 
@@ -891,19 +871,10 @@ moveBoot:
    mov eax, [bootX]
    dec eax
    mov [carx], eax
-   mov ecx, eax
+   mov [bootX], eax
 
    mov eax, [bootY]
    mov [carY], eax
-
-   call validatePos
-   cmp byte al, 0
-   je .done
-
-   mov [bootX], ecx
-
-   mov eax, 0x1
-   mov [color], eax
 
    call drawPlayer
 
@@ -923,9 +894,6 @@ moveBoot:
 
    jmp .done
 
-   
-
-
 .done: 
    mov eax, [bootX]
    mov ebx, [bootY]
@@ -933,7 +901,7 @@ moveBoot:
    ret 
 
 
-;-------------------Variables and Constans------------------------; 
+;-------------------Variables and Constans------------------------; }
 scan_code_table:
    db 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0
    db 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0
@@ -961,12 +929,21 @@ boot2y    dd 95
 boot2x    dd 50
 boot3y    dd 95
 boot3x    dd 60
-bootY    dd 0x0
-bootX    dd 0x0
+bootY     dd 0x0
+bootX     dd 0x0
+
+pointsP1 dd 0x0
+pointsP2 dd 0x0 
+pointsB1 dd 0x0
+pointsB2 dd 0x0
+pointsB3 dd 0x0
 
 number dd 0x0    
 timer dd 0x0                   ; Temporizador en valor numérico
-string db '00000', 0
+string db '000', 0
+
+
+
 
 carx      dd 0x0
 carY      dd 0x0
