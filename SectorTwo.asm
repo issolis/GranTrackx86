@@ -2,7 +2,7 @@ org 0x7E00
 
 pit_command equ 0x43
 pit_channel_0 equ 0x40
-divisor equ 19886
+divisor equ 40000
  
 
 ;.....................main....................; 
@@ -12,8 +12,68 @@ main:
    int 0x10
    
    call drawTrack
-   
 
+;Assign colors 
+
+   mov byte [column], 1
+
+   mov word [cornerY], 8
+   mov word [cornerX], 0
+
+   mov word [height], 7
+   mov word [width], 7
+
+   mov eax, 0x1
+   mov [color], eax
+   call drawBox
+
+
+
+   mov word [cornerY], 16
+   mov word [cornerX], 0
+
+   mov word [height], 7
+   mov word [width], 7
+
+   mov eax, 0x77
+   mov [color], eax
+   call drawBox
+
+
+   mov word [cornerY], 24
+   mov word [cornerX], 0
+
+   mov word [height], 7
+   mov word [width], 7
+
+   mov eax, 0x55
+   mov [color], eax
+   call drawBox
+
+
+   mov word [cornerY], 32
+   mov word [cornerX], 0
+
+   mov word [height], 7
+   mov word [width], 7
+
+   mov eax, 0x3
+   mov [color], eax
+   call drawBox
+
+
+
+   mov word [cornerY], 40
+   mov word [cornerX], 0
+
+   mov word [height], 7
+   mov word [width], 7
+
+   mov eax, 0x2
+   mov [color], eax
+   call drawBox
+
+   ;draw bots
    mov eax, 95   ;95
    mov [carY], eax
    mov [pla1Y], eax
@@ -38,48 +98,37 @@ main:
    mov eax, 0x77
    mov [color], eax
 
+
+   
+
    call drawPlayer
 
    mov eax, 0
    mov [timer], eax
+
+   
+
+   mov eax, 60
+   mov [boot3x], eax
+   mov eax, 95
+   mov [boot3y], eax
+
+   mov eax, 50
+   mov [boot2x], eax
+   mov eax, 95
+   mov [boot2y], eax
+
+   mov eax, 40
+   mov [boot1x], eax
+   mov eax, 95
+   mov [boot1y], eax
+
+
    call boots
+   
+
    call Timer_Setup
    call SetupKeyboardInterupt
-
-   mov byte [column], 0
-   lea si, [timerText]
-   call print_string
-   mov byte [column], 2
-
-   mov byte [column], 0
-   mov byte [row], 1
-   lea si, [p1text]
-   call print_string
-   mov byte [column], 2
-
-   mov byte [column], 0
-   mov byte [row], 2
-   lea si, [p2text]
-   call print_string
-   mov byte [column], 2
-
-   mov byte [column], 0
-   mov byte [row], 3
-   lea si, [B1text]
-   call print_string
-   mov byte [column], 2
-
-   mov byte [column], 0
-   mov byte [row],4
-   lea si, [B2text]
-   call print_string
-   mov byte [column], 2
-
-   mov byte [column], 0
-   mov byte [row],5
-   lea si, [B3text]
-   call print_string
-   mov byte [column], 2
   
    
    jmp $
@@ -123,6 +172,16 @@ Key_Up:
 
 
 Key_Down:   
+   mov eax, [timer]
+   inc eax
+   mov [timer], eax
+   xor edx, edx 
+   mov ebx, 60 
+   div ebx
+
+   mov ebx, 60
+   cmp eax, ebx
+   jg .done
    
 
    cmp byte [keyval], 'w'
@@ -603,7 +662,9 @@ drawPlayer:
    mov [cornerX], eax
 
    mov word [height], 5
-   mov word [width], 5
+   mov word [width],  5
+
+   
 
    call drawBox
 
@@ -611,7 +672,11 @@ drawPlayer:
 
 
 ;.....................timer.........................;
+
+
 Timer_Event:
+
+  
    ;---Timer---;
    cli
    mov eax, [timer]
@@ -619,14 +684,32 @@ Timer_Event:
    mov [timer], eax
    xor edx, edx 
    mov ebx, 60 
+   div ebx
+
+   mov ebx, 11
+   cmp eax, ebx
+   jl .notFinished
+
+
+
+
+ 
+.notFinished: 
+   mov eax, [timer]
+   inc eax
+   mov [timer], eax
+   xor edx, edx 
+   mov ebx, 60
    div ebx 
    mov [number], eax
    mov byte [row], 0x0
    call print_timer_value
    ;----Finish Line----;
+
+   
+
    call drawFinishLine
 
- 
    ;----Boots motion----; 
    ; first boot
    mov eax, [boot1x]
@@ -635,8 +718,6 @@ Timer_Event:
    mov [bootY], eax
    mov eax, 0x55
    mov [color], eax
-
-
 
    call moveBoot
 
@@ -651,7 +732,6 @@ Timer_Event:
    mov [bootY], eax
    mov eax, 0x3
    mov [color], eax
-
 
    call moveBoot
 
@@ -673,7 +753,7 @@ Timer_Event:
    mov [boot3x], eax
    mov [boot3y], ebx
 
-   ;....Counting playes points....; 
+   ;....Counting players points....; 
    mov eax, [followTrackP1]
    mov [followTrackP], eax
    mov eax, [pla1Y]
@@ -753,8 +833,11 @@ Timer_Event:
 
    mov byte [row], 0x5
    call print_timer_value
-
    sti
+
+   jmp .done
+
+.done: 
    ret
 
 timer_interrupt:
@@ -855,62 +938,6 @@ countingPoints:
    ret
 ;...................choose winer......................; 
 
-chooseWiner: 
-   mov eax, [pointsP1]
-   mov [pointsBP], eax 
-   mov eax, 1
-   mov [indexBP], eax
-
-.firstComp:
-   mov eax, [pointsBP]
-   mov ebx, [pointsP2]
-
-   cmp ebx,eax 
-   jle .secondComp
-
-   mov [pointsBP], ebx
-   mov eax, 2
-   mov [indexBP], eax
-
-.secondComp: 
-   mov eax, [pointsBP]
-   mov ebx, [pointsB1]
-
-   cmp ebx,eax 
-   jle .thirdComp
-
-   mov [pointsBP], ebx
-   mov eax, 3
-   mov [indexBP], eax
-
-.thirdComp: 
-   mov eax, [pointsBP]
-   mov ebx, [pointsB2]
-
-   cmp ebx,eax 
-   jle .fourthComp
-
-   mov [pointsBP], ebx
-   mov eax, 4
-   mov [indexBP], eax
-
-.fourthComp:
-   mov eax, [pointsBP]
-   mov ebx, [pointsB3]
-
-   cmp ebx,eax 
-   jle .fourthComp
-
-   mov [pointsBP], ebx
-   mov eax, 5
-   mov [indexBP], eax
-
-   jmp .done
-
-.done: 
-   ret
-   
-
 
 
 ;..........................boots......................;
@@ -976,7 +1003,7 @@ moveBoot:
 .firstLine: 
    
    mov eax, [bootY]
-   dec eax
+   sub eax, 2
    mov [carY], eax
    mov [bootY], eax
 
@@ -986,13 +1013,13 @@ moveBoot:
    call drawPlayer
 
    mov eax, [bootY]
-   add eax, 5 
+   add eax, 5
    mov [cornerY], eax 
    mov eax, [bootX]
    mov [cornerX], eax
 
    mov word [width], 5
-   mov word [height],1
+   mov word [height],2
 
    mov eax, 0x09
    mov [color], eax
@@ -1003,7 +1030,7 @@ moveBoot:
 
 .secondLine: 
    mov eax, [bootX]
-   inc eax
+   add eax, 2
 
    mov [bootX], eax
    mov [carx], eax
@@ -1014,13 +1041,13 @@ moveBoot:
    call drawPlayer
 
    mov eax, [bootX]
-   dec eax
+   sub eax, 2
    mov [cornerX], eax
    mov eax, [bootY]
    mov [cornerY], eax
 
    mov word [height], 5 
-   mov word [width],  1
+   mov word [width],  2
 
    mov eax, 0x09
    mov [color], eax
@@ -1036,7 +1063,7 @@ moveBoot:
    jge .done
 
    mov eax, [bootY]
-   inc eax
+   add eax, 2
 
    mov [carY], eax
    mov [bootY], eax
@@ -1047,13 +1074,13 @@ moveBoot:
    call drawPlayer
 
    mov eax, [bootY]
-   dec eax
+   sub eax, 2
    mov [cornerY], eax 
    mov eax, [bootX]
    mov [cornerX], eax
 
    mov word [width], 5
-   mov word [height],1
+   mov word [height],2
 
    mov eax, 0x09
    mov [color], eax
@@ -1069,7 +1096,7 @@ moveBoot:
    jle .firstLine
 
    mov eax, [bootX]
-   dec eax
+   sub eax, 2
    mov [carx], eax
    mov [bootX], eax
 
@@ -1085,7 +1112,7 @@ moveBoot:
    mov [cornerY], eax
 
    mov word [height], 5 
-   mov word [width],  1
+   mov word [width],  2
 
    mov eax, 0x09
    mov [color], eax
@@ -1101,7 +1128,22 @@ moveBoot:
    ret 
 
 
+
+
+
 ;-------------------Variables and Constans------------------------; 
+
+wholeBlack: 
+   mov word [cornerY], 20
+   mov word [cornerX], 0x20
+
+   mov word [height], 200
+   mov word [width], 320
+
+   mov eax, 0x0
+   mov [color], eax
+   call drawBox
+
 scan_code_table:
    db 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0
    db 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0
@@ -1164,5 +1206,12 @@ p2text db 'P2', 0
 B1text db 'B1', 0
 B2text db 'B2', 0
 B3text db 'B3', 0
+
+wonMessageP1 db 'Player 1 won the game', 0
+wonMessageP2 db 'Player 2 won the game', 0
+wonMessageB1 db 'Player 3 won the game', 0
+wonMessageB2 db 'Player 4 won the game', 0
+wonMessageB3 db 'Player 5 won the game', 0
+
 carx      dd 0x0
 carY      dd 0x0

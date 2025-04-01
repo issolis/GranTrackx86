@@ -1,0 +1,117 @@
+
+printWinner: 
+   call chooseWinner
+   mov eax, [indexBP]
+   mov byte [column], 10
+   mov byte [row],    15
+  
+
+   cmp eax, 1
+   je .p1Won
+   cmp eax, 2
+   je .p2Won
+   cmp eax, 3
+   je .B1Won
+   cmp eax, 4
+   je .B2Won
+   cmp eax, 5
+   je .B3Won
+
+   jmp .done
+
+
+
+.p1Won: 
+   lea si, [wonMessageP1]
+   call print_string
+   jmp .done
+.p2Won: 
+   lea si, [wonMessageP2]
+   call print_string
+   jmp .done
+.B1Won: 
+   lea si, [wonMessageB1]
+   call print_string
+   jmp .done
+.B2Won: 
+   lea si, [wonMessageB2]
+   call print_string
+   jmp .done
+.B3Won: 
+   lea si, [wonMessageB3]
+   call print_string
+   jmp .done
+
+
+.done: 
+   ret 
+
+
+chooseWinner: 
+   mov eax, [pointsP1]
+   mov [pointsBP], eax 
+   mov eax, 1
+   mov [indexBP], eax
+
+   jmp .firstComp
+
+.firstComp:
+   
+   mov eax, [pointsBP]
+   mov ebx, [pointsP2]
+
+   cmp ebx,eax 
+   jle .secondComp
+
+   mov [pointsBP], ebx
+   mov eax, 2
+   mov [indexBP], eax
+
+   
+   jmp .secondComp
+
+.secondComp: 
+   
+   mov eax, [pointsBP]
+   mov ebx, [pointsB1]
+
+   cmp ebx,eax 
+   jle .thirdComp
+
+   mov [pointsBP], ebx
+   mov eax, 3
+   mov [indexBP], eax
+
+
+   jmp .thirdComp
+
+.thirdComp: 
+   mov eax, [pointsBP]
+   mov ebx, [pointsB2]
+
+   cmp ebx,eax 
+   jle .fourthComp
+
+   mov [pointsBP], ebx
+   mov eax, 4
+   mov [indexBP], eax
+
+   jmp .fourthComp
+
+.fourthComp:
+   mov eax, [pointsBP]
+   mov ebx, [pointsB3]
+
+   cmp ebx,eax 
+   jle .fourthComp
+
+   mov [pointsBP], ebx
+   mov eax, 5
+   mov [indexBP], eax
+
+   call drawBox
+
+
+   ret 
+.done: 
+   ret
