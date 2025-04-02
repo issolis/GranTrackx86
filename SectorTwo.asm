@@ -73,8 +73,7 @@ main:
    mov [color], eax
    call drawBox
 
-   ;draw bots
-   mov eax, 95   ;95
+   mov eax, 90   ;95
    mov [carY], eax
    mov [pla1Y], eax
 
@@ -87,7 +86,7 @@ main:
 
    call drawPlayer
 
-   mov eax, 95   ;95
+   mov eax, 90   ;95
    mov [carY], eax
    mov [pla2Y], eax
 
@@ -765,7 +764,7 @@ Timer_Event:
    mov ebx, 60 
    div ebx
 
-   mov ebx, 20
+   mov ebx, 61
    cmp eax, ebx
    jl .notFinished
 
